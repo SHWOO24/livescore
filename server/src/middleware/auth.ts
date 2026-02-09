@@ -30,6 +30,13 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
       return res.status(401).json({ message: '사용자를 찾을 수 없습니다' });
     }
 
+    // 승인된 사용자만 접근 가능 (ADMIN은 항상 승인됨)
+    if (user.role !== 'ADMIN' && user.status !== 'APPROVED') {
+      return res.status(403).json({ 
+        message: '계정 승인이 필요합니다. 관리자 승인 후 로그인할 수 있습니다.' 
+      });
+    }
+
     if (!user.isVerified) {
       return res.status(401).json({ message: '이메일 인증이 필요합니다' });
     }
@@ -38,5 +45,25 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
     next();
   } catch (error) {
     return res.status(401).json({ message: '인증에 실패했습니다' });
+  }
+};
+
+/**
+ * ADMIN 권한이 필요한 미들웨어
+ */
+export const requireAdmin = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    // protect 미들웨어를 먼저 통과해야 함
+    if (!req.user) {
+      return res.status(401).json({ message: '인증이 필요합니다' });
+    }
+
+    if (req.user.role !== 'ADMIN') {
+      return res.status(403).json({ message: '관리자 권한이 필요합니다' });
+    }
+
+    next();
+  } catch (error) {
+    return res.status(403).json({ message: '권한 확인에 실패했습니다' });
   }
 };

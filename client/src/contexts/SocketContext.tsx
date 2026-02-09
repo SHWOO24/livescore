@@ -40,22 +40,14 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     // Socket URL 결정: VITE_SOCKET_URL 우선, 없으면 VITE_API_BASE_URL 사용
     const socketUrl = import.meta.env.VITE_SOCKET_URL || import.meta.env.VITE_API_BASE_URL;
     
-    // 프로덕션 환경에서는 환경변수가 필수
-    if (import.meta.env.MODE === 'production' || import.meta.env.PROD) {
-      if (!socketUrl) {
+    // 환경변수가 없으면 Socket.io 연결하지 않음
+    if (!socketUrl) {
+      if (import.meta.env.MODE === 'production' || import.meta.env.PROD) {
         console.warn(
           '⚠️ [Socket] VITE_SOCKET_URL 또는 VITE_API_BASE_URL 환경변수가 설정되지 않았습니다.\n' +
           '프로덕션 환경에서는 백엔드 서버 URL을 환경변수로 설정해야 합니다.\n' +
-          '예: VITE_SOCKET_URL=https://api.scorelivenow.com'
+          '예: VITE_SOCKET_URL=https://acceptable-determination-production-a4db.up.railway.app'
         );
-        return;
-      }
-    }
-    
-    // 개발 환경에서도 localhost가 아닌 경우에만 연결 (로컬 네트워크 장치 연결 팝업 방지)
-    if (!socketUrl || socketUrl.includes('localhost') || socketUrl.includes('127.0.0.1')) {
-      if (import.meta.env.DEV) {
-        console.log('⚠️ [Socket] 개발 환경: Socket.io 연결 비활성화 (localhost 감지)');
       }
       return;
     }
@@ -63,7 +55,7 @@ export const SocketProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     const newSocket = io(socketUrl, {
       withCredentials: true,
       autoConnect: true,
-      reconnection: false, // 자동 재연결 비활성화 (로컬 네트워크 팝업 방지)
+      reconnection: true, // 자동 재연결 활성화
       transports: ['websocket', 'polling'], // WebSocket 우선, 실패 시 polling
       auth: async (cb) => {
         try {

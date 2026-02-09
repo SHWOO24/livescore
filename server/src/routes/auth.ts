@@ -34,11 +34,13 @@ router.post(
       // 인증 토큰 생성
       const verificationToken = generateVerificationToken();
 
-      // 사용자 생성
+      // 사용자 생성 (기본 상태: PENDING)
       const user = await User.create({
         email,
         password,
         name,
+        role: 'USER',
+        status: 'PENDING', // 기본 상태는 승인 대기
         verificationToken,
       });
 
@@ -46,11 +48,12 @@ router.post(
       await sendVerificationEmail(email, verificationToken);
 
       res.status(201).json({
-        message: '회원가입이 완료되었습니다. 이메일을 확인하여 인증해주세요.',
+        message: '회원가입이 완료되었습니다. 관리자 승인 후 로그인할 수 있습니다.',
         user: {
           id: user._id,
           email: user.email,
           name: user.name,
+          status: user.status,
         },
       });
     } catch (error: any) {
@@ -114,6 +117,14 @@ router.post(
         return res.status(401).json({ message: '이메일 인증이 필요합니다' });
       }
 
+      // 승인된 사용자만 로그인 가능 (ADMIN은 항상 승인됨)
+      if (user.role !== 'ADMIN' && user.status !== 'APPROVED') {
+        return res.status(403).json({ 
+          message: '계정 승인이 필요합니다. 관리자 승인 후 로그인할 수 있습니다.',
+          status: user.status 
+        });
+      }
+
       const isPasswordValid = await user.comparePassword(password);
       if (!isPasswordValid) {
         return res.status(401).json({ message: '이메일 또는 비밀번호가 올바르지 않습니다' });
@@ -134,6 +145,8 @@ router.post(
           id: user._id,
           email: user.email,
           name: user.name,
+          role: user.role,
+          status: user.status,
         },
         token,
       });
@@ -159,6 +172,8 @@ router.get('/me', protect, async (req: AuthRequest, res: Response) => {
       id: req.user._id,
       email: req.user.email,
       name: req.user.name,
+      role: req.user.role,
+      status: req.user.status,
     },
   });
 });

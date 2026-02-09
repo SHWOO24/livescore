@@ -1,10 +1,15 @@
 import mongoose, { Document, Schema } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+export type UserRole = 'USER' | 'ADMIN';
+export type UserStatus = 'PENDING' | 'APPROVED' | 'REJECTED';
+
 export interface IUser extends Document {
   email: string;
   password: string;
   name: string;
+  role: UserRole;
+  status: UserStatus;
   isVerified: boolean;
   verificationToken?: string;
   resetPasswordToken?: string;
@@ -34,6 +39,16 @@ const userSchema = new Schema<IUser>(
       type: String,
       required: [true, '이름을 입력해주세요'],
       trim: true,
+    },
+    role: {
+      type: String,
+      enum: ['USER', 'ADMIN'],
+      default: 'USER',
+    },
+    status: {
+      type: String,
+      enum: ['PENDING', 'APPROVED', 'REJECTED'],
+      default: 'PENDING',
     },
     isVerified: {
       type: Boolean,

@@ -39,9 +39,12 @@ const DEFAULT_SPORTS = [
 // 연결 모드 타입
 type ConnectionMode = 'socket' | 'rest';
 
+type StatusFilter = 'all' | 'live' | 'scheduled' | 'finished';
+
 const Home: React.FC = () => {
   const [sports, setSports] = useState<string[]>(DEFAULT_SPORTS);
   const [selectedSport, setSelectedSport] = useState<string>(DEFAULT_SPORTS[0]);
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [events, setEvents] = useState<NormalizedEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState<string>('');
@@ -233,9 +236,24 @@ const Home: React.FC = () => {
     venue: event.venue,
   });
 
+  // 상태별 필터링
   const liveEvents = events.filter((e) => e.status === 'live');
   const scheduledEvents = events.filter((e) => e.status === 'scheduled');
   const finishedEvents = events.filter((e) => e.status === 'finished');
+
+  // 선택된 필터에 따라 이벤트 필터링
+  const filteredEvents = React.useMemo(() => {
+    switch (statusFilter) {
+      case 'live':
+        return liveEvents;
+      case 'scheduled':
+        return scheduledEvents;
+      case 'finished':
+        return finishedEvents;
+      default:
+        return events;
+    }
+  }, [events, statusFilter, liveEvents, scheduledEvents, finishedEvents]);
 
   return (
     <div className="min-h-screen">
@@ -300,22 +318,25 @@ const Home: React.FC = () => {
         {/* 상태별 탭 */}
         <div className="flex space-x-4 mb-6">
           {[
-            { id: 'all', label: '전체', count: events.length },
-            { id: 'live', label: '라이브', count: liveEvents.length },
-            { id: 'scheduled', label: '예정', count: scheduledEvents.length },
-            { id: 'finished', label: '종료', count: finishedEvents.length },
+            { id: 'all' as StatusFilter, label: '전체', count: events.length },
+            { id: 'live' as StatusFilter, label: '라이브', count: liveEvents.length },
+            { id: 'scheduled' as StatusFilter, label: '예정', count: scheduledEvents.length },
+            { id: 'finished' as StatusFilter, label: '종료', count: finishedEvents.length },
           ].map((tab) => (
             <button
               key={tab.id}
+              onClick={() => setStatusFilter(tab.id)}
               className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors ${
-                tab.id === 'all'
+                statusFilter === tab.id
                   ? 'bg-primary-600 text-white'
                   : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
               }`}
             >
               {tab.label}
               {tab.count > 0 && (
-                <span className="ml-2 px-2 py-0.5 text-xs bg-white/20 rounded-full">
+                <span className={`ml-2 px-2 py-0.5 text-xs rounded-full ${
+                  statusFilter === tab.id ? 'bg-white/20' : 'bg-gray-200'
+                }`}>
                   {tab.count}
                 </span>
               )}
@@ -328,16 +349,20 @@ const Home: React.FC = () => {
           <div className="flex items-center justify-center py-20">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
           </div>
-        ) : events.length === 0 ? (
+        ) : filteredEvents.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-gray-500 text-lg">{selectedSport} 경기 정보가 없습니다</p>
+            <p className="text-gray-500 text-lg">
+              {statusFilter === 'all' 
+                ? `${selectedSport} 경기 정보가 없습니다`
+                : `${selectedSport} ${statusFilter === 'live' ? '라이브' : statusFilter === 'scheduled' ? '예정' : '종료'} 경기가 없습니다`}
+            </p>
             <p className="text-gray-400 text-sm mt-2">
               {connected ? '실시간 업데이트 대기 중...' : '백엔드 서버가 실행 중인지 확인해주세요.'}
             </p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {events.map((event, index) => (
+            {filteredEvents.map((event, index) => (
               <motion.div
                 key={event.eventId}
                 initial={{ opacity: 0, y: 20 }}

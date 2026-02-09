@@ -41,7 +41,10 @@ const Register: React.FC = () => {
 
     try {
       await register(formData.email, formData.password, formData.name);
-      navigate('/login');
+      // 승인 대기 안내 후 로그인 페이지로 이동
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
     } catch (error) {
       // 에러는 AuthContext에서 이미 처리됨
     } finally {

@@ -1,41 +1,39 @@
 /**
  * API 클라이언트 설정
  * 
- * 백엔드 서버 URL 우선순위:
- * 1. VITE_API_BASE_URL 환경변수 (명시적 설정)
- * 2. 현재 도메인 기반 자동 감지 (프로덕션)
- * 3. localhost:5000 (개발 환경)
+ * 백엔드 서버 URL:
+ * - VITE_API_BASE_URL 환경변수 사용 (필수)
+ * - 프로덕션: .env.production 파일에서 설정
+ * - 개발: .env.development 파일에서 설정 (선택사항, 없으면 Vite proxy 사용)
  */
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 // 백엔드 서버 URL 결정
 function getApiBaseURL(): string {
-  // 1. 환경변수가 명시적으로 설정된 경우 (최우선)
+  // 환경변수가 설정된 경우 사용
   if (import.meta.env.VITE_API_BASE_URL) {
     return import.meta.env.VITE_API_BASE_URL;
   }
 
-  // 2. 프로덕션 환경에서는 환경변수가 필수
+  // 프로덕션 환경에서는 환경변수가 필수
   if (import.meta.env.MODE === 'production' || import.meta.env.PROD) {
-    if (!import.meta.env.VITE_API_BASE_URL) {
-      console.error(
-        '❌ [API] VITE_API_BASE_URL 환경변수가 설정되지 않았습니다.\n' +
-        '프로덕션 환경에서는 백엔드 서버 URL을 환경변수로 설정해야 합니다.\n' +
-        '예: VITE_API_BASE_URL=https://api.scorelivenow.com\n' +
-        '\n' +
-        '해결 방법:\n' +
-        '1. client/.env.production 파일 생성\n' +
-        '2. VITE_API_BASE_URL=https://your-backend-url.com 입력\n' +
-        '3. npm run build 실행\n' +
-        '4. 재배포'
-      );
-      // 프로덕션에서 환경변수가 없으면 빈 문자열 반환
-      return '';
-    }
+    console.error(
+      '❌ [API] VITE_API_BASE_URL 환경변수가 설정되지 않았습니다.\n' +
+      '프로덕션 환경에서는 백엔드 서버 URL을 환경변수로 설정해야 합니다.\n' +
+      '예: VITE_API_BASE_URL=https://acceptable-determination-production-a4db.up.railway.app\n' +
+      '\n' +
+      '해결 방법:\n' +
+      '1. client/.env.production 파일 확인\n' +
+      '2. VITE_API_BASE_URL=https://your-backend-url.com 설정\n' +
+      '3. npm run build 실행\n' +
+      '4. 재배포'
+    );
+    return '';
   }
 
-  // 3. 개발 환경 기본값
-  return 'http://localhost:5000';
+  // 개발 환경: 환경변수가 없으면 빈 문자열 반환 (Vite proxy 사용)
+  // Vite proxy는 vite.config.ts에서 설정됨
+  return '';
 }
 
 const apiBaseURL = getApiBaseURL();
@@ -50,7 +48,7 @@ if ((import.meta.env.MODE === 'production' || import.meta.env.PROD) && !apiBaseU
 }
 
 const api = axios.create({
-  baseURL: apiBaseURL || '/api', // 폴백: 상대 경로 (프로덕션에서 환경변수 없을 때)
+  baseURL: apiBaseURL, // 환경변수에서 가져온 URL 사용
   withCredentials: true,
   timeout: 15000, // 15초 타임아웃 (프로덕션 네트워크 지연 고려)
   headers: {

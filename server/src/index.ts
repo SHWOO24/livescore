@@ -6,6 +6,7 @@ import { Server } from 'socket.io';
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import authRoutes from './routes/auth.js';
+import adminRoutes from './routes/admin.js';
 import matchRoutes from './routes/matches.js';
 import chatRoutes from './routes/chat.js';
 import chatRoomRoutes from './routes/chatRooms.js';
@@ -14,6 +15,7 @@ import livescoreRoutes from './routes/livescore.js';
 import { setupSocketIO } from './utils/socket.js';
 import { seedMatches, seedChatRooms } from './utils/seedData.js';
 import { startPolling } from './services/polling.js';
+import { createInitialAdmin } from './utils/createAdmin.js';
 import rateLimit from 'express-rate-limit';
 
 dotenv.config();
@@ -95,6 +97,7 @@ app.use((req: any, res, next) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/admin', adminRoutes);
 app.use('/api/matches', matchRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/chat-rooms', chatRoomRoutes);
@@ -119,6 +122,9 @@ httpServer.listen(PORT, '0.0.0.0', () => {
   mongoose.connect(MONGODB_URI)
     .then(async () => {
       console.log('✅ MongoDB 연결 성공');
+      
+      // 초기 ADMIN 계정 생성
+      await createInitialAdmin();
       
       // 개발 환경에서 샘플 데이터 생성
       if (process.env.NODE_ENV !== 'production') {

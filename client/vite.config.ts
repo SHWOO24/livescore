@@ -24,10 +24,18 @@ export default defineConfig({
   plugins: [react(), envCheckPlugin()],
   server: {
     port: 3000,
+    // 개발 환경에서만 proxy 사용 (로컬 개발 서버용)
+    // 프로덕션 빌드에서는 VITE_API_BASE_URL 환경변수를 사용하므로 proxy는 사용되지 않음
     proxy: {
       '/api': {
         target: 'http://localhost:5000',
-        changeOrigin: true
+        changeOrigin: true,
+        // 개발 환경에서만 활성화
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('⚠️ [Dev Proxy] 로컬 백엔드 서버에 연결할 수 없습니다. VITE_API_BASE_URL 환경변수를 설정하거나 백엔드 서버를 실행하세요.');
+          });
+        },
       }
     }
   },
