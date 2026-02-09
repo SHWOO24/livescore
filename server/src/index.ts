@@ -25,25 +25,50 @@ const PORT = parseInt(process.env.PORT || '5000', 10);
 const MONGODB_URI = process.env.DATABASE_URL || process.env.MONGODB_URI || 'mongodb://localhost:27017/livescore';
 
 // CORS 설정
-// 운영 환경: https://scorelivenow.com, https://www.scorelivenow.com
-// 개발 환경: http://localhost:3000
-const corsOrigins = process.env.CORS_ORIGIN 
-  ? process.env.CORS_ORIGIN.split(',').map(o => o.trim())
-  : process.env.NODE_ENV === 'production'
-    ? ['https://scorelivenow.com', 'https://www.scorelivenow.com']
-    : ['http://localhost:3000'];
+// Railway 환경변수 CORS_ORIGIN을 사용하여 허용된 Origin 목록 파싱
+const allowedOrigins = (process.env.CORS_ORIGIN || "")
+  .split(",")
+  .map(s => s.trim())
+  .filter(Boolean);
 
-// Middleware
+// CORS 설정 디버깅 로그
+console.log('🔧 [CORS] 설정 정보:');
+console.log('  - CORS_ORIGIN 환경변수:', process.env.CORS_ORIGIN || '(설정되지 않음)');
+console.log('  - NODE_ENV:', process.env.NODE_ENV || '(설정되지 않음)');
+console.log('  - 허용된 Origin:', allowedOrigins.length > 0 ? allowedOrigins : '(없음 - 모든 Origin 허용)');
+
+// CORS Middleware
 app.use(cors({
-  origin: corsOrigins,
+  origin: (origin, cb) => {
+    // origin이 없으면 same-origin/서버간 호출 허용
+    if (!origin) return cb(null, true);
+    // 허용된 Origin 목록에 있으면 허용
+    if (allowedOrigins.includes(origin)) return cb(null, true);
+    // 그 외는 거부
+    return cb(null, false);
+  },
   credentials: true,
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"]
 }));
+
+// Preflight(OPTIONS) 요청 처리
+app.options("*", cors());
 
 // Socket.io 설정 (reverse proxy 환경 대응)
 const io = new Server(httpServer, {
   cors: {
-    origin: corsOrigins,
+    origin: (origin, cb) => {
+      // origin이 없으면 same-origin/서버간 호출 허용
+      if (!origin) return cb(null, true);
+      // 허용된 Origin 목록에 있으면 허용
+      if (allowedOrigins.includes(origin)) return cb(null, true);
+      // 그 외는 거부
+      return cb(null, false);
+    },
     credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"]
   },
   // Reverse proxy 환경에서도 동작하도록 설정
   transports: ['websocket', 'polling'],
