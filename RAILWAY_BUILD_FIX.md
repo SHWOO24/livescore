@@ -1,11 +1,8 @@
-# Railway 빌드 실패 해결 가이드
+# Railway 빌드 실패 해결 가이드 (Dockerfile 기반)
 
-## 🔍 빌드 실패 원인 확인
+## 🎯 Railway 안정 배포 설정
 
-Railway 대시보드에서:
-1. "livescore" 서비스 클릭
-2. "Logs" 탭 클릭
-3. 빌드 로그에서 에러 메시지 확인
+이 레포는 **Dockerfile 기반 배포**를 사용하여 Railway에서 안정적으로 빌드/배포됩니다.
 
 ---
 
@@ -16,73 +13,42 @@ Railway 대시보드에서:
 Railway 대시보드 → 서비스 → Settings:
 
 #### 필수 설정:
-- **Root Directory**: `server` ⚠️ 중요!
-- **Build Command**: `npm ci && npm run build`
-- **Start Command**: `npm start`
+- **Root Directory**: (비워두거나 루트 디렉토리) - Dockerfile이 루트에 있으므로
+- **Builder**: `DOCKERFILE` (자동 감지 또는 railway.json 설정)
+- **Start Command**: `npm start` (자동 감지)
 
 #### 확인 방법:
 1. Railway 대시보드 → 서비스 선택
 2. Settings 탭
-3. "Root Directory"가 `server`로 설정되어 있는지 확인
-4. "Build Command"와 "Start Command" 확인
+3. Builder가 `DOCKERFILE`로 설정되어 있는지 확인
+4. Dockerfile이 루트에 있는지 확인
 
 ---
 
-## 🔧 일반적인 빌드 실패 원인 및 해결
+## 🔧 Dockerfile 기반 빌드
 
-### 1. Root Directory 설정 오류
+### 빌드 프로세스:
 
-**문제**: Root Directory가 비어있거나 `./`로 설정됨
+1. **의존성 설치**:
+   - 루트: `npm install` (npm ci 사용 안 함)
+   - 서버: `npm install`
+   - 클라이언트: `npm install` (TypeScript 포함)
 
-**해결**:
-- Root Directory를 `server`로 설정
+2. **빌드**:
+   - 서버: `npm run build` (TypeScript 컴파일)
+   - 클라이언트: `npm run build` (TypeScript 컴파일 + Vite 빌드)
 
-### 2. Build Command 오류
-
-**문제**: `npm install` 대신 `npm ci` 사용 필요
-
-**해결**:
-- Build Command: `npm ci && npm run build`
-- `npm ci`는 `package-lock.json`을 기반으로 정확한 버전 설치
-
-### 3. TypeScript 빌드 오류
-
-**문제**: TypeScript 컴파일 오류
-
-**해결**:
-1. 로컬에서 테스트:
-   ```bash
-   cd server
-   npm ci
-   npm run build
-   ```
-2. 오류가 있으면 수정 후 다시 푸시
-
-### 4. 의존성 문제
-
-**문제**: `devDependencies`가 프로덕션에서 설치되지 않음
-
-**해결**:
-- TypeScript는 `devDependencies`에 있지만 빌드에 필요
-- Railway는 자동으로 `npm ci --production=false` 실행 (기본값)
-- 또는 Build Command에 `NPM_CONFIG_PRODUCTION=false npm ci` 추가
-
-### 5. 환경변수 누락
-
-**문제**: 필수 환경변수가 설정되지 않음
-
-**해결**:
-- Railway → Variables 탭에서 환경변수 설정
-- 필수 환경변수 목록은 아래 참고
+3. **실행**:
+   - `npm start` → `cd server && npm start`
 
 ---
 
 ## 📋 Railway 필수 설정 체크리스트
 
 ### 서비스 설정
-- [ ] Root Directory: `server`
-- [ ] Build Command: `npm ci && npm run build`
-- [ ] Start Command: `npm start`
+- [ ] Dockerfile이 루트 디렉토리에 있음
+- [ ] Builder: `DOCKERFILE` 설정됨 (또는 자동 감지)
+- [ ] Start Command: `npm start` 확인됨
 
 ### 환경변수 (Variables 탭)
 - [ ] `NODE_ENV=production`
@@ -92,7 +58,6 @@ Railway 대시보드 → 서비스 → Settings:
 - [ ] `DATABASE_URL` 또는 `MONGODB_URI` (MongoDB 연결 문자열)
 - [ ] `THESPORTSDB_API_KEY=123`
 - [ ] `CACHE_TTL_SECONDS=30`
-- [ ] `POLL_INTERVAL_SECONDS=30`
 - [ ] `PRIMARY_POLL_INTERVAL_SECONDS=30`
 - [ ] `SECONDARY_POLL_INTERVAL_SECONDS=90`
 - [ ] `DEFAULT_SPORTS=Soccer,Basketball,Baseball,American Football,Ice Hockey`
@@ -104,23 +69,25 @@ Railway 대시보드 → 서비스 → Settings:
 ### Step 1: 로컬 빌드 테스트
 
 ```bash
-cd server
-npm ci
-npm run build
+# Dockerfile로 로컬 빌드 테스트
+docker build -t livescore-test .
+docker run -p 5000:5000 livescore-test
 ```
 
-오류가 있으면 수정 후 다시 푸시:
+또는 직접 빌드 테스트:
 ```bash
-F:\PortableGit\bin\git.exe add .
-F:\PortableGit\bin\git.exe commit -m "Fix build errors"
-F:\PortableGit\bin\git.exe push origin main
+# 루트에서
+npm install
+cd server && npm install && npm run build
+cd ../client && npm install && npm run build
+cd ../server && npm start
 ```
 
 ### Step 2: Railway 설정 확인
 
 1. Railway 대시보드 → 서비스 → Settings
-2. Root Directory 확인: `server`
-3. Build Command 확인: `npm ci && npm run build`
+2. Builder 확인: `DOCKERFILE`
+3. Dockerfile 경로 확인: 루트 디렉토리
 4. Start Command 확인: `npm start`
 
 ### Step 3: 환경변수 설정
@@ -138,35 +105,37 @@ F:\PortableGit\bin\git.exe push origin main
 ### Step 5: 로그 확인
 
 1. Railway 대시보드 → 서비스 → Logs
-2. 빌드 로그에서 에러 확인
-3. 에러 메시지에 따라 수정
+2. 빌드 로그에서 확인:
+   - `npm install` 실행됨 (npm ci 없음)
+   - 서버 빌드 성공
+   - 클라이언트 빌드 성공
+   - 서버 시작 성공
 
 ---
 
 ## 🔍 로그에서 확인할 사항
 
-### 빌드 단계 로그 확인:
+### 성공적인 빌드 로그:
 ```
-✓ Installing dependencies
-✓ Building project
-✓ Starting service
+✓ Installing dependencies (npm install)
+✓ Building server (npm run build)
+✓ Building client (npm run build)
+✓ Starting service (npm start)
 ```
 
 ### 일반적인 에러 메시지:
 
-1. **"Cannot find module"**
-   - 의존성 설치 실패
-   - `package-lock.json` 확인
+1. **"Cannot find Dockerfile"**
+   - Dockerfile이 루트 디렉토리에 있는지 확인
+   - railway.json에서 dockerfilePath 확인
 
 2. **"TypeScript compilation error"**
    - TypeScript 오류
-   - 로컬에서 `npm run build` 테스트
+   - 로컬에서 빌드 테스트
 
-3. **"Root Directory not found"**
-   - Root Directory가 `server`로 설정되지 않음
-
-4. **"Command not found"**
-   - Build Command 또는 Start Command 오류
+3. **"npm ci" 명령어 발견**
+   - Dockerfile에서 npm ci를 사용하지 않도록 확인
+   - npm install만 사용
 
 ---
 
@@ -177,19 +146,19 @@ F:\PortableGit\bin\git.exe push origin main
 1. 서비스 삭제 (선택사항)
 2. 새 서비스 생성
 3. GitHub 저장소 연결
-4. **Root Directory: `server`** 설정 ⚠️ 중요!
+4. **Builder: DOCKERFILE** 확인 (자동 감지)
 5. 환경변수 설정
 6. 배포
 
-### 방법 2: railway.json 파일 생성 (선택사항)
+### 방법 2: railway.json 파일 확인
 
-`server/railway.json` 파일 생성:
+`server/railway.json` 파일이 올바르게 설정되어 있는지 확인:
 ```json
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "NIXPACKS",
-    "buildCommand": "npm ci && npm run build"
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "Dockerfile"
   },
   "deploy": {
     "startCommand": "npm start",
@@ -225,5 +194,19 @@ F:\PortableGit\bin\git.exe push origin main
 
 여전히 문제가 있으면:
 1. Railway 로그의 전체 에러 메시지 확인
-2. 로컬에서 `cd server && npm ci && npm run build` 테스트
+2. 로컬에서 Dockerfile 빌드 테스트
 3. 에러 메시지를 공유해주시면 더 구체적으로 도와드릴 수 있습니다
+
+---
+
+## 🔑 핵심 변경사항
+
+### 이전 (npm ci 기반):
+- ❌ `npm ci` 사용 → EBUSY 오류 발생
+- ❌ Root Directory: `server` 설정 필요
+- ❌ Build Command 수동 설정 필요
+
+### 현재 (Dockerfile 기반):
+- ✅ `npm install` 사용 → EBUSY 오류 없음
+- ✅ 루트 디렉토리 사용 (Dockerfile 자동 감지)
+- ✅ Dockerfile이 모든 빌드 단계 관리

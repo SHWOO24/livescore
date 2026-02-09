@@ -21,7 +21,7 @@ livescore/
 ```
 
 **업로드하지 말아야 할 것**:
-- ❌ `node_modules/` - 서버에서 `npm ci`로 설치
+- ❌ `node_modules/` - 서버에서 `npm install`로 설치
 - ❌ `dist/` - 서버에서 `npm run build`로 생성
 - ❌ `.env` - 서버에서 환경변수로 설정
 
@@ -62,9 +62,9 @@ server/
 1. **Render 대시보드 접속**
 2. **새 Web Service 생성**
 3. **중요 설정**:
-   - **Root Directory**: `server` ⚠️ 중요!
-   - **Build Command**: `npm ci && npm run build`
-   - **Start Command**: `npm start`
+   - **Root Directory**: (루트 디렉토리 사용, Dockerfile 기반)
+   - **Builder**: Dockerfile (자동 감지)
+   - **Start Command**: `npm start` (자동 감지)
 
 **디렉토리 구조 (Render가 자동 처리)**:
 ```
@@ -82,8 +82,8 @@ Render 서버:
 1. **Railway 대시보드 접속**
 2. **새 프로젝트 생성**
 3. **중요 설정**:
-   - **Root Directory**: `server`
-   - **Build Command**: `npm ci && npm run build` (자동 감지)
+   - **Root Directory**: (루트 디렉토리 사용, Dockerfile 기반)
+   - **Builder**: Dockerfile (자동 감지 또는 railway.json 설정)
    - **Start Command**: `npm start` (자동 감지)
 
 ---
@@ -151,8 +151,8 @@ cd server
 ```bash
 cd ~/livescore-server/server
 
-# 의존성 설치
-npm ci
+# 의존성 설치 (npm ci 대신 npm install 사용)
+npm install
 
 # TypeScript 빌드
 npm run build
@@ -217,8 +217,8 @@ pm2 startup
 
 ### Render 배포 시
 
-- [ ] Root Directory: `server` 설정 확인
-- [ ] Build Command: `npm ci && npm run build` 설정 확인
+- [ ] Dockerfile이 루트에 있는지 확인
+- [ ] Builder: Dockerfile 설정 확인 (또는 자동 감지)
 - [ ] Start Command: `npm start` 설정 확인
 - [ ] 모든 필수 환경변수 설정 확인
 
@@ -227,7 +227,7 @@ pm2 startup
 - [ ] `~/livescore-server/server/` 디렉토리 생성 확인
 - [ ] `src/` 폴더 업로드 확인
 - [ ] `package.json` 업로드 확인
-- [ ] `npm ci` 실행 성공 확인
+- [ ] `npm install` 실행 성공 확인
 - [ ] `npm run build` 실행 성공 확인
 - [ ] `dist/index.js` 파일 생성 확인
 - [ ] `.env` 파일 생성 및 설정 확인
@@ -299,16 +299,15 @@ pm2 logs livescore-api
 
 ## 🚀 빠른 배포 명령어
 
-### Render (Git 기반)
+### Render/Railway (Git 기반, Dockerfile 사용)
 
 ```bash
-# 로컬에서
-cd server
+# 로컬에서 (루트 디렉토리에서)
 git add .
 git commit -m "Deploy backend"
 git push origin main
 
-# Render가 자동으로 배포
+# Render/Railway가 Dockerfile을 자동으로 감지하여 배포
 ```
 
 ### VPS (수동)
@@ -317,7 +316,7 @@ git push origin main
 # 서버에서
 cd ~/livescore-server/server
 git pull origin main  # 또는 파일 업로드
-npm ci
+npm install  # npm ci 대신 npm install 사용
 npm run build
 pm2 restart livescore-api
 ```
@@ -326,10 +325,10 @@ pm2 restart livescore-api
 
 ## 📝 요약
 
-### Render/Railway
-- **업로드**: GitHub에 `server/` 폴더 푸시
-- **디렉토리 설정**: Root Directory = `server`
-- **빌드/실행**: 플랫폼이 자동 처리
+### Render/Railway (Dockerfile 기반)
+- **업로드**: GitHub에 전체 레포 푸시 (Dockerfile 포함)
+- **디렉토리 설정**: 루트 디렉토리 사용 (Dockerfile 자동 감지)
+- **빌드/실행**: Dockerfile 기반으로 플랫폼이 자동 처리
 
 ### VPS
 - **업로드**: `~/livescore-server/server/` 디렉토리

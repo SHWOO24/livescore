@@ -1,4 +1,4 @@
-# Railway로 백엔드 서버 배포 가이드
+# Railway로 백엔드 서버 배포 가이드 (Dockerfile 기반)
 
 ## 📋 사전 요구사항
 
@@ -13,11 +13,15 @@
 ### 1단계: GitHub에 코드 푸시
 
 ```bash
-# 로컬에서
+# 로컬에서 (루트 디렉토리에서)
 git add .
 git commit -m "Prepare for Railway deployment"
 git push origin main
 ```
+
+**중요**: Dockerfile이 루트 디렉토리에 있어야 합니다.
+
+---
 
 ### 2단계: Railway에서 새 프로젝트 생성
 
@@ -26,32 +30,53 @@ git push origin main
 3. "Deploy from GitHub repo" 선택
 4. GitHub 저장소 연결 및 선택
 
+---
+
 ### 3단계: 서비스 설정
 
 #### 기본 설정
 
-- **Root Directory**: `server` ⚠️ **중요!** (서버 코드가 있는 디렉토리)
-- **Build Command**: (자동 감지 또는 수동 설정)
-  ```bash
-  npm ci && npm run build
-  ```
-- **Start Command**: (자동 감지 또는 수동 설정)
-  ```bash
-  npm start
-  ```
+Railway가 **Dockerfile을 자동으로 감지**합니다:
+
+- **Root Directory**: (비워두거나 루트) - Dockerfile이 루트에 있으므로
+- **Builder**: `DOCKERFILE` (자동 감지)
+- **Start Command**: `npm start` (자동 감지)
 
 **디렉토리 구조 설명**:
 ```
 GitHub 저장소:
 livescore/
-├── client/          ← 프론트엔드 (업로드 안 함)
-└── server/          ← 백엔드 (Root Directory로 설정)
-    ├── src/        ← 소스 코드
+├── Dockerfile          ← 루트에 있음 (필수)
+├── package.json        ← 루트 package.json
+├── server/             ← 백엔드 코드
+│   ├── src/
+│   ├── package.json
+│   └── tsconfig.json
+└── client/             ← 프론트엔드 코드 (빌드에 포함)
+    ├── src/
     ├── package.json
     └── tsconfig.json
 ```
 
-Railway는 `server/` 디렉토리를 루트로 인식합니다.
+Railway는 루트 디렉토리의 Dockerfile을 사용하여 빌드합니다.
+
+#### railway.json 설정 (선택사항)
+
+`server/railway.json` 파일이 이미 설정되어 있습니다:
+```json
+{
+  "$schema": "https://railway.app/railway.schema.json",
+  "build": {
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "Dockerfile"
+  },
+  "deploy": {
+    "startCommand": "npm start",
+    "restartPolicyType": "ON_FAILURE",
+    "restartPolicyMaxRetries": 10
+  }
+}
+```
 
 #### 환경변수 설정
 
@@ -77,6 +102,8 @@ Railway 대시보드 → 프로젝트 → 서비스 → Variables 탭에서 다�
 - `EMAIL_USER`: 이메일 계정
 - `EMAIL_PASS`: 이메일 앱 비밀번호
 
+---
+
 ### 4단계: MongoDB Atlas 설정
 
 1. MongoDB Atlas 계정 생성 (https://www.mongodb.com/cloud/atlas)
@@ -85,6 +112,8 @@ Railway 대시보드 → 프로젝트 → 서비스 → Variables 탭에서 다�
 4. Network Access에서 IP 주소 허용 (Railway IP 또는 0.0.0.0/0)
 5. 연결 문자열 복사: `mongodb+srv://username:password@cluster.mongodb.net/livescore`
 6. Railway 환경변수 `DATABASE_URL`에 설정
+
+---
 
 ### 5단계: 배포 확인
 
@@ -103,11 +132,14 @@ Railway 대시보드 → 프로젝트 → 서비스 → Variables 탭에서 다�
 }
 ```
 
-### 6단계: 도메인 설정 (선택사항)
+---
 
-1. Railway 대시보드 → 프로젝트 → Settings
-2. "Generate Domain" 클릭하여 Railway 도메인 생성
-3. 또는 Custom Domain 설정 (도메인 소유권 확인 필요)
+### 6단계: Public Domain 생성
+
+1. Railway 대시보드 → 서비스 → Settings → Networking
+2. "⚡ Generate Domain" 클릭하여 Railway 도메인 생성
+3. 생성된 Public Domain 확인 (예: `https://your-service.railway.app`)
+4. 프론트엔드 환경변수에 이 도메인 설정
 
 ---
 
@@ -116,8 +148,14 @@ Railway 대시보드 → 프로젝트 → 서비스 → Variables 탭에서 다�
 ### 배포 실패
 
 - **로그 확인**: Railway 대시보드 → Deployments → Logs
-- **빌드 오류**: `npm ci` 및 `npm run build` 로컬에서 테스트
+- **빌드 오류**: Dockerfile 로컬에서 테스트
 - **환경변수 확인**: 모든 필수 환경변수가 설정되었는지 확인
+
+### Dockerfile 빌드 실패
+
+- **Dockerfile 위치 확인**: 루트 디렉토리에 있는지 확인
+- **로컬 빌드 테스트**: `docker build -t test .` 실행
+- **로그 확인**: 빌드 로그에서 에러 메시지 확인
 
 ### MongoDB 연결 실패
 
@@ -165,17 +203,39 @@ Railway 무료 티어:
 ## ✅ 체크리스트
 
 - [ ] GitHub 저장소 연결
-- [ ] Root Directory: `server` 설정
+- [ ] Dockerfile이 루트 디렉토리에 있음
+- [ ] Builder: DOCKERFILE 설정됨 (자동 감지)
 - [ ] 모든 필수 환경변수 설정
 - [ ] MongoDB Atlas 연결 설정
 - [ ] 배포 성공 확인
 - [ ] 헬스체크 통과
+- [ ] Public Domain 생성
 - [ ] 프론트엔드에서 API 호출 테스트
 
 ---
 
 ## 🔗 관련 문서
 
-- [DEPLOYMENT.md](./DEPLOYMENT.md): 전체 배포 가이드
-- [BACKEND_DEPLOY_RENDER.md](./BACKEND_DEPLOY_RENDER.md): Render 배포 가이드
+- [Railway 빌드 수정](./RAILWAY_BUILD_FIX.md): 빌드 실패 해결 가이드
+- [백엔드 업로드 가이드](./BACKEND_UPLOAD_GUIDE.md): 디렉토리 구조 가이드
 - Railway 공식 문서: https://docs.railway.app
+
+---
+
+## 🔑 핵심 변경사항
+
+### Dockerfile 기반 배포의 장점:
+
+1. **npm ci 제거**: EBUSY 오류 완전 해결
+2. **안정적인 빌드**: 모든 빌드 단계가 Dockerfile에 명시됨
+3. **TypeScript 보장**: devDependencies가 항상 설치됨
+4. **일관성**: 로컬과 프로덕션 환경이 동일
+
+### 빌드 프로세스:
+
+1. 루트 의존성 설치 (`npm install`)
+2. 서버 의존성 설치 (`npm install`)
+3. 클라이언트 의존성 설치 (`npm install` - TypeScript 포함)
+4. 서버 빌드 (`npm run build`)
+5. 클라이언트 빌드 (`npm run build`)
+6. 서버 실행 (`npm start`)

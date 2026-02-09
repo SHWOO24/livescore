@@ -1,6 +1,7 @@
 node_modules/
 dist/
 build/
+.cache/
 deploy/
 server-upload/
 *.zip
@@ -14,3 +15,9 @@ server-upload/
 .idea/
 # PM2 로그
 server/logs/
+# Client 빌드 결과물
+client/dist/
+# Server 빌드 결과물
+server/dist/
+# Docker
+.dockerignore

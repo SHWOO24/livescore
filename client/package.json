@@ -4,10 +4,11 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "npx tsc && vite build",
     "preview": "vite preview",
-    "build:check": "tsc --noEmit && vite build",
-    "deploy:prepare": "npm run build && node scripts/prepare-deploy.js"
+    "build:check": "npx tsc --noEmit && vite build",
+    "deploy:prepare": "npm run build && node scripts/prepare-deploy.js",
+    "create:env": "node create-env-production.js"
   },
   "dependencies": {
     "react": "^18.2.0",

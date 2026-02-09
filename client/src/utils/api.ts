@@ -17,13 +17,21 @@ function getApiBaseURL(): string {
 
   // 2. 프로덕션 환경에서는 환경변수가 필수
   if (import.meta.env.MODE === 'production' || import.meta.env.PROD) {
-    console.error(
-      '❌ [API] VITE_API_BASE_URL 환경변수가 설정되지 않았습니다.\n' +
-      '프로덕션 환경에서는 백엔드 서버 URL을 환경변수로 설정해야 합니다.\n' +
-      '예: VITE_API_BASE_URL=https://api.scorelivenow.com'
-    );
-    // 프로덕션에서 환경변수가 없으면 빈 문자열 반환하여 명확한 에러 발생
-    return '';
+    if (!import.meta.env.VITE_API_BASE_URL) {
+      console.error(
+        '❌ [API] VITE_API_BASE_URL 환경변수가 설정되지 않았습니다.\n' +
+        '프로덕션 환경에서는 백엔드 서버 URL을 환경변수로 설정해야 합니다.\n' +
+        '예: VITE_API_BASE_URL=https://api.scorelivenow.com\n' +
+        '\n' +
+        '해결 방법:\n' +
+        '1. client/.env.production 파일 생성\n' +
+        '2. VITE_API_BASE_URL=https://your-backend-url.com 입력\n' +
+        '3. npm run build 실행\n' +
+        '4. 재배포'
+      );
+      // 프로덕션에서 환경변수가 없으면 빈 문자열 반환
+      return '';
+    }
   }
 
   // 3. 개발 환경 기본값
@@ -50,16 +58,17 @@ const api = axios.create({
   },
 });
 
-// 요청 인터셉터 - 로깅
+// 요청 인터셉터 - 로깅 및 디버깅
 api.interceptors.request.use(
   (config) => {
-    // 개발 환경에서만 로깅
-    if (import.meta.env.DEV) {
-      console.log(`[API] ${config.method?.toUpperCase()} ${config.url}`);
-    }
+    // API 호출 정보 로깅 (프로덕션에서도 디버깅용)
+    const fullUrl = config.baseURL ? `${config.baseURL}${config.url}` : config.url;
+    console.log(`[API] ${config.method?.toUpperCase()} ${fullUrl}`);
+    console.log(`[API] Base URL: ${config.baseURL || '(없음)'}`);
     return config;
   },
   (error) => {
+    console.error('[API] 요청 오류:', error);
     return Promise.reject(error);
   }
 );
@@ -76,9 +85,19 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
     const config = error.config as InternalAxiosRequestConfig & { _retry?: boolean };
     
+    // 에러 상세 정보 로깅
+    console.error('[API] 응답 오류:', {
+      url: config?.url,
+      baseURL: config?.baseURL,
+      status: error.response?.status,
+      message: error.message,
+      code: error.code,
+    });
+    
     // 404 오류는 재시도하지 않음 (백엔드 서버가 없는 경우)
     if (error.response?.status === 404) {
       console.warn('[API] 404 오류: 백엔드 서버를 찾을 수 없습니다.');
+      console.warn(`[API] 요청 URL: ${config?.baseURL}${config?.url}`);
       retryCount = 0;
       return Promise.reject(error);
     }
