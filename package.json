@@ -1,0 +1,23 @@
+{
+  "name": "livescore",
+  "version": "1.0.0",
+  "description": "실시간 라이브스코어 사이트",
+  "main": "server/index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "build": "cd client && npm run build",
+    "build:server": "cd server && npm run build",
+    "start": "cd server && npm start",
+    "install:all": "npm install && cd server && npm install && cd ../client && npm install",
+    "prepare:upload": "node scripts/prepare-server-upload.js",
+    "zip:client": "node scripts/zip-client-dist.js"
+  },
+  "keywords": ["livescore", "sports", "real-time"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  }
+}

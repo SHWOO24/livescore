@@ -1,0 +1,29 @@
+{
+  "name": "라이브스코어 - 실시간 경기 정보",
+  "short_name": "라이브스코어",
+  "description": "실시간 라이브스코어 - 모든 스포츠 경기의 실시간 스코어와 정보를 확인하세요",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#0ea5e9",
+  "icons": [
+    {
+      "src": "/favicon.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo-icon.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/logo.png",
+      "sizes": "800x200",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "header": {
+    "home": "Home",
+    "login": "Login",
+    "register": "Register",
+    "logout": "Logout",
+    "welcome": ""
+  },
+  "home": {
+    "title": "Live Score",
+    "subtitle": "Check real-time scores and information for all sports matches",
+    "all": "All",
+    "live": "Live",
+    "scheduled": "Scheduled",
+    "noMatches": "No matches available"
+  },
+  "match": {
+    "live": "LIVE",
+    "finished": "Finished",
+    "scheduled": "Scheduled"
+  },
+  "chat": {
+    "title": "Live Chat",
+    "placeholder": "Type your message...",
+    "send": "Send",
+    "loginRequired": "Login required"
+  },
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email Address",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "name": "Name",
+    "forgotPassword": "Forgot your password?",
+    "alreadyHaveAccount": "Already have an account?",
+    "noAccount": "Or",
+    "loginSuccess": "Login successful!",
+    "registerSuccess": "Registration completed. Please check your email.",
+    "logoutSuccess": "Logged out successfully"
+  },
+  "footer": {
+    "copyright": "© 2024 LiveScore. All rights reserved."
+  }
+}

@@ -1,0 +1,45 @@
+{
+  "header": {
+    "home": "Início",
+    "login": "Entrar",
+    "register": "Registrar",
+    "logout": "Sair",
+    "welcome": ""
+  },
+  "home": {
+    "title": "Placar ao Vivo",
+    "subtitle": "Verifique pontuações e informações em tempo real de todas as partidas esportivas",
+    "all": "Todos",
+    "live": "Ao Vivo",
+    "scheduled": "Agendados",
+    "noMatches": "Nenhuma partida disponível"
+  },
+  "match": {
+    "live": "AO VIVO",
+    "finished": "Finalizado",
+    "scheduled": "Agendado"
+  },
+  "chat": {
+    "title": "Chat ao Vivo",
+    "placeholder": "Digite sua mensagem...",
+    "send": "Enviar",
+    "loginRequired": "Login necessário"
+  },
+  "auth": {
+    "login": "Entrar",
+    "register": "Registrar",
+    "email": "Endereço de e-mail",
+    "password": "Senha",
+    "confirmPassword": "Confirmar senha",
+    "name": "Nome",
+    "forgotPassword": "Esqueceu sua senha?",
+    "alreadyHaveAccount": "Já tem uma conta?",
+    "noAccount": "Ou",
+    "loginSuccess": "Login bem-sucedido!",
+    "registerSuccess": "Registro concluído. Por favor, verifique seu e-mail.",
+    "logoutSuccess": "Logout realizado com sucesso"
+  },
+  "footer": {
+    "copyright": "© 2024 Placar ao Vivo. All rights reserved."
+  }
+}

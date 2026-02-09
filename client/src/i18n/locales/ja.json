@@ -1,0 +1,45 @@
+{
+  "header": {
+    "home": "ホーム",
+    "login": "ログイン",
+    "register": "登録",
+    "logout": "ログアウト",
+    "welcome": "さん"
+  },
+  "home": {
+    "title": "ライブスコア",
+    "subtitle": "すべてのスポーツ試合のリアルタイムスコアと情報を確認",
+    "all": "すべて",
+    "live": "ライブ",
+    "scheduled": "予定",
+    "noMatches": "試合情報がありません"
+  },
+  "match": {
+    "live": "ライブ",
+    "finished": "終了",
+    "scheduled": "予定"
+  },
+  "chat": {
+    "title": "ライブチャット",
+    "placeholder": "メッセージを入力...",
+    "send": "送信",
+    "loginRequired": "ログインが必要です"
+  },
+  "auth": {
+    "login": "ログイン",
+    "register": "登録",
+    "email": "メールアドレス",
+    "password": "パスワード",
+    "confirmPassword": "パスワード確認",
+    "name": "名前",
+    "forgotPassword": "パスワードをお忘れですか？",
+    "alreadyHaveAccount": "すでにアカウントをお持ちですか？",
+    "noAccount": "または",
+    "loginSuccess": "ログイン成功！",
+    "registerSuccess": "登録が完了しました。メールを確認してください。",
+    "logoutSuccess": "ログアウトしました"
+  },
+  "footer": {
+    "copyright": "© 2024 ライブスコア. All rights reserved."
+  }
+}

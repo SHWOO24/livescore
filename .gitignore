@@ -1,0 +1,16 @@
+node_modules/
+dist/
+build/
+deploy/
+server-upload/
+*.zip
+.env
+.env.local
+.env.production
+.env.development
+.DS_Store
+*.log
+.vscode/
+.idea/
+# PM2 로그
+server/logs/

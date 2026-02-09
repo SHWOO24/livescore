@@ -1,0 +1,45 @@
+{
+  "header": {
+    "home": "Inicio",
+    "login": "Iniciar sesión",
+    "register": "Registrarse",
+    "logout": "Cerrar sesión",
+    "welcome": ""
+  },
+  "home": {
+    "title": "Puntuación en Vivo",
+    "subtitle": "Consulta las puntuaciones e información en tiempo real de todos los partidos deportivos",
+    "all": "Todos",
+    "live": "En Vivo",
+    "scheduled": "Programados",
+    "noMatches": "No hay partidos disponibles"
+  },
+  "match": {
+    "live": "EN VIVO",
+    "finished": "Finalizado",
+    "scheduled": "Programado"
+  },
+  "chat": {
+    "title": "Chat en Vivo",
+    "placeholder": "Escribe tu mensaje...",
+    "send": "Enviar",
+    "loginRequired": "Se requiere inicio de sesión"
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "register": "Registrarse",
+    "email": "Dirección de correo electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "name": "Nombre",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+    "noAccount": "O",
+    "loginSuccess": "¡Inicio de sesión exitoso!",
+    "registerSuccess": "Registro completado. Por favor revisa tu correo electrónico.",
+    "logoutSuccess": "Sesión cerrada exitosamente"
+  },
+  "footer": {
+    "copyright": "© 2024 Puntuación en Vivo. All rights reserved."
+  }
+}

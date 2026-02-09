@@ -1,0 +1,45 @@
+{
+  "header": {
+    "home": "首页",
+    "login": "登录",
+    "register": "注册",
+    "logout": "登出",
+    "welcome": ""
+  },
+  "home": {
+    "title": "实时比分",
+    "subtitle": "查看所有体育赛事的实时比分和信息",
+    "all": "全部",
+    "live": "直播",
+    "scheduled": "赛程",
+    "noMatches": "没有比赛信息"
+  },
+  "match": {
+    "live": "直播",
+    "finished": "已结束",
+    "scheduled": "赛程"
+  },
+  "chat": {
+    "title": "实时聊天",
+    "placeholder": "输入消息...",
+    "send": "发送",
+    "loginRequired": "需要登录"
+  },
+  "auth": {
+    "login": "登录",
+    "register": "注册",
+    "email": "电子邮件地址",
+    "password": "密码",
+    "confirmPassword": "确认密码",
+    "name": "姓名",
+    "forgotPassword": "忘记密码？",
+    "alreadyHaveAccount": "已有账户？",
+    "noAccount": "或",
+    "loginSuccess": "登录成功！",
+    "registerSuccess": "注册完成。请检查您的电子邮件。",
+    "logoutSuccess": "已登出"
+  },
+  "footer": {
+    "copyright": "© 2024 实时比分. All rights reserved."
+  }
+}

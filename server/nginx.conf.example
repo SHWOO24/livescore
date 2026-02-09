@@ -1,0 +1,122 @@
+# Nginx 설정 예시
+# /etc/nginx/sites-available/scorelivenow-api 또는 /etc/nginx/conf.d/scorelivenow-api.conf
+# 
+# 사용법:
+# 1. 이 파일을 /etc/nginx/sites-available/scorelivenow-api 에 복사
+# 2. ln -s /etc/nginx/sites-available/scorelivenow-api /etc/nginx/sites-enabled/
+# 3. nginx -t (설정 테스트)
+# 4. systemctl reload nginx
+
+# 업스트림 서버 정의 (Node.js 앱)
+upstream livescore_backend {
+    server 127.0.0.1:5000;
+    keepalive 64;
+}
+
+# HTTP에서 HTTPS로 리다이렉트
+server {
+    listen 80;
+    listen [::]:80;
+    server_name api.scorelivenow.com;
+
+    # Let's Encrypt 인증서 갱신용
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+    }
+
+    # 모든 HTTP 요청을 HTTPS로 리다이렉트
+    location / {
+        return 301 https://$server_name$request_uri;
+    }
+}
+
+# HTTPS 서버
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name api.scorelivenow.com;
+
+    # SSL 인증서 설정 (Let's Encrypt 사용 시)
+    ssl_certificate /etc/letsencrypt/live/api.scorelivenow.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/api.scorelivenow.com/privkey.pem;
+    
+    # SSL 보안 설정
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_ciphers HIGH:!aNULL:!MD5;
+    ssl_prefer_server_ciphers on;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 10m;
+
+    # 보안 헤더
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    # 로그 설정
+    access_log /var/log/nginx/scorelivenow-api-access.log;
+    error_log /var/log/nginx/scorelivenow-api-error.log;
+
+    # 최대 업로드 크기
+    client_max_body_size 10M;
+
+    # Socket.io WebSocket 프록시
+    location /socket.io/ {
+        proxy_pass http://livescore_backend;
+        proxy_http_version 1.1;
+        
+        # WebSocket 업그레이드 필수
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        
+        # 기본 프록시 헤더
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $server_port;
+        
+        # 타임아웃 설정 (WebSocket은 긴 연결 유지)
+        proxy_connect_timeout 7d;
+        proxy_send_timeout 7d;
+        proxy_read_timeout 7d;
+        
+        # 버퍼링 비활성화 (실시간 통신)
+        proxy_buffering off;
+    }
+
+    # API 엔드포인트 프록시
+    location /api/ {
+        proxy_pass http://livescore_backend;
+        proxy_http_version 1.1;
+        
+        # 기본 프록시 헤더
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+        proxy_set_header X-Forwarded-Port $server_port;
+        
+        # 타임아웃 설정
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+        
+        # CORS는 Express에서 처리하므로 여기서는 기본 프록시만 설정
+    }
+
+    # 헬스체크 엔드포인트 (선택사항)
+    location /health {
+        proxy_pass http://livescore_backend/api/health;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        access_log off;
+    }
+
+    # 루트 경로는 404
+    location / {
+        return 404;
+    }
+}

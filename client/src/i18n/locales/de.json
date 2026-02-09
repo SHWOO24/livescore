@@ -1,0 +1,45 @@
+{
+  "header": {
+    "home": "Startseite",
+    "login": "Anmelden",
+    "register": "Registrieren",
+    "logout": "Abmelden",
+    "welcome": ""
+  },
+  "home": {
+    "title": "Live-Ergebnisse",
+    "subtitle": "Prüfen Sie Echtzeit-Ergebnisse und Informationen für alle Sportspiele",
+    "all": "Alle",
+    "live": "Live",
+    "scheduled": "Geplant",
+    "noMatches": "Keine Spiele verfügbar"
+  },
+  "match": {
+    "live": "LIVE",
+    "finished": "Beendet",
+    "scheduled": "Geplant"
+  },
+  "chat": {
+    "title": "Live-Chat",
+    "placeholder": "Geben Sie Ihre Nachricht ein...",
+    "send": "Senden",
+    "loginRequired": "Anmeldung erforderlich"
+  },
+  "auth": {
+    "login": "Anmelden",
+    "register": "Registrieren",
+    "email": "E-Mail-Adresse",
+    "password": "Passwort",
+    "confirmPassword": "Passwort bestätigen",
+    "name": "Name",
+    "forgotPassword": "Passwort vergessen?",
+    "alreadyHaveAccount": "Haben Sie bereits ein Konto?",
+    "noAccount": "Oder",
+    "loginSuccess": "Anmeldung erfolgreich!",
+    "registerSuccess": "Registrierung abgeschlossen. Bitte überprüfen Sie Ihre E-Mail.",
+    "logoutSuccess": "Erfolgreich abgemeldet"
+  },
+  "footer": {
+    "copyright": "© 2024 Live-Ergebnisse. All rights reserved."
+  }
+}

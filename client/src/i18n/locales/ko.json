@@ -1,0 +1,45 @@
+{
+  "header": {
+    "home": "홈",
+    "login": "로그인",
+    "register": "회원가입",
+    "logout": "로그아웃",
+    "welcome": "님"
+  },
+  "home": {
+    "title": "실시간 라이브스코어",
+    "subtitle": "모든 스포츠 경기의 실시간 스코어와 정보를 확인하세요",
+    "all": "전체",
+    "live": "라이브",
+    "scheduled": "예정",
+    "noMatches": "경기 정보가 없습니다"
+  },
+  "match": {
+    "live": "LIVE",
+    "finished": "종료",
+    "scheduled": "예정"
+  },
+  "chat": {
+    "title": "실시간 채팅",
+    "placeholder": "메시지를 입력하세요...",
+    "send": "전송",
+    "loginRequired": "로그인이 필요합니다"
+  },
+  "auth": {
+    "login": "로그인",
+    "register": "회원가입",
+    "email": "이메일 주소",
+    "password": "비밀번호",
+    "confirmPassword": "비밀번호 확인",
+    "name": "이름",
+    "forgotPassword": "비밀번호를 잊으셨나요?",
+    "alreadyHaveAccount": "이미 계정이 있으신가요?",
+    "noAccount": "또는",
+    "loginSuccess": "로그인 성공!",
+    "registerSuccess": "회원가입이 완료되었습니다. 이메일을 확인해주세요.",
+    "logoutSuccess": "로그아웃되었습니다"
+  },
+  "footer": {
+    "copyright": "© 2024 라이브스코어. All rights reserved."
+  }
+}

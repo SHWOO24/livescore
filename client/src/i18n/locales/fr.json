@@ -1,0 +1,45 @@
+{
+  "header": {
+    "home": "Accueil",
+    "login": "Connexion",
+    "register": "S'inscrire",
+    "logout": "Déconnexion",
+    "welcome": ""
+  },
+  "home": {
+    "title": "Score en Direct",
+    "subtitle": "Consultez les scores et informations en temps réel de tous les matchs sportifs",
+    "all": "Tous",
+    "live": "En Direct",
+    "scheduled": "Programmés",
+    "noMatches": "Aucun match disponible"
+  },
+  "match": {
+    "live": "EN DIRECT",
+    "finished": "Terminé",
+    "scheduled": "Programmé"
+  },
+  "chat": {
+    "title": "Chat en Direct",
+    "placeholder": "Tapez votre message...",
+    "send": "Envoyer",
+    "loginRequired": "Connexion requise"
+  },
+  "auth": {
+    "login": "Connexion",
+    "register": "S'inscrire",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "name": "Nom",
+    "forgotPassword": "Mot de passe oublié ?",
+    "alreadyHaveAccount": "Vous avez déjà un compte ?",
+    "noAccount": "Ou",
+    "loginSuccess": "Connexion réussie !",
+    "registerSuccess": "Inscription terminée. Veuillez vérifier votre e-mail.",
+    "logoutSuccess": "Déconnexion réussie"
+  },
+  "footer": {
+    "copyright": "© 2024 Score en Direct. All rights reserved."
+  }
+}
