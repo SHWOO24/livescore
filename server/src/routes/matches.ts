@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { body, validationResult, query } from 'express-validator';
 import Match from '../models/Match.js';
 import { protect } from '../middleware/auth.js';
@@ -13,7 +13,7 @@ router.get(
     query('sport').optional().isString(),
     query('date').optional().isISO8601(),
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const { status, sport, date } = req.query;
       const filter: any = {};
@@ -92,7 +92,7 @@ router.post(
     body('awayTeam').notEmpty().withMessage('원정팀을 입력해주세요'),
     body('matchDate').isISO8601().withMessage('올바른 날짜 형식이 아닙니다'),
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -123,7 +123,7 @@ router.patch(
     body('awayScore').optional().isInt({ min: 0 }),
     body('status').optional().isIn(['scheduled', 'live', 'finished']),
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const { homeScore, awayScore, status } = req.body;
       const match = await Match.findById(req.params.id);

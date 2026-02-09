@@ -1,7 +1,7 @@
-import express from 'express';
+import express, { Response } from 'express';
 import { body, validationResult, query } from 'express-validator';
 import ChatRoom from '../models/ChatRoom.js';
-import { protect } from '../middleware/auth.js';
+import { protect, AuthRequest } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -11,7 +11,7 @@ router.get(
   [
     query('public').optional().isBoolean(),
   ],
-  async (req: any, res) => {
+  async (req: AuthRequest, res: Response) => {
     try {
       const { public: isPublic } = req.query;
       const filter: any = {};
@@ -69,7 +69,7 @@ router.post(
     body('description').optional().isLength({ max: 200 }).withMessage('설명은 200자 이하여야 합니다'),
     body('isPublic').optional().isBoolean(),
   ],
-  async (req: any, res) => {
+  async (req: AuthRequest, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -77,6 +77,10 @@ router.post(
       }
 
       const { name, description, isPublic = true } = req.body;
+
+      if (!req.user) {
+        return res.status(401).json({ message: '인증이 필요합니다' });
+      }
 
       const room = await ChatRoom.create({
         name,
@@ -101,12 +105,16 @@ router.post(
 router.post(
   '/:id/join',
   protect,
-  async (req: any, res) => {
+  async (req: AuthRequest, res: Response) => {
     try {
       const room = await ChatRoom.findById(req.params.id);
 
       if (!room) {
         return res.status(404).json({ message: '채팅룸을 찾을 수 없습니다' });
+      }
+
+      if (!req.user) {
+        return res.status(401).json({ message: '인증이 필요합니다' });
       }
 
       if (room.members.includes(req.user._id)) {
@@ -131,7 +139,7 @@ router.post(
 router.post(
   '/:id/leave',
   protect,
-  async (req: any, res) => {
+  async (req: AuthRequest, res: Response) => {
     try {
       const room = await ChatRoom.findById(req.params.id);
 
@@ -139,12 +147,21 @@ router.post(
         return res.status(404).json({ message: '채팅룸을 찾을 수 없습니다' });
       }
 
+      if (!req.user) {
+        return res.status(401).json({ message: '인증이 필요합니다' });
+      }
+
       if (room.createdBy.toString() === req.user._id.toString()) {
         return res.status(400).json({ message: '채팅룸 생성자는 나갈 수 없습니다' });
       }
 
+      if (!req.user) {
+        return res.status(401).json({ message: '인증이 필요합니다' });
+      }
+
+      const userId = req.user._id;
       room.members = room.members.filter(
-        (memberId) => memberId.toString() !== req.user._id.toString()
+        (memberId) => memberId.toString() !== userId.toString()
       );
       await room.save();
 

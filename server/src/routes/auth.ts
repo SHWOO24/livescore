@@ -1,9 +1,9 @@
-import express from 'express';
+import express, { Request, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import User from '../models/User.js';
 import { generateToken, generateVerificationToken, generateResetToken } from '../utils/generateToken.js';
 import { sendVerificationEmail, sendPasswordResetEmail } from '../utils/email.js';
-import { protect } from '../middleware/auth.js';
+import { protect, AuthRequest } from '../middleware/auth.js';
 import jwt from 'jsonwebtoken';
 
 const router = express.Router();
@@ -16,7 +16,7 @@ router.post(
     body('password').isLength({ min: 6 }).withMessage('비밀번호는 최소 6자 이상이어야 합니다'),
     body('name').trim().notEmpty().withMessage('이름을 입력해주세요'),
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -96,7 +96,7 @@ router.post(
     body('email').isEmail().withMessage('올바른 이메일 형식이 아닙니다'),
     body('password').notEmpty().withMessage('비밀번호를 입력해주세요'),
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -150,7 +150,10 @@ router.post('/logout', (req, res) => {
 });
 
 // 현재 사용자 정보
-router.get('/me', protect, async (req: any, res) => {
+router.get('/me', protect, async (req: AuthRequest, res: Response) => {
+  if (!req.user) {
+    return res.status(401).json({ message: '인증이 필요합니다' });
+  }
   res.json({
     user: {
       id: req.user._id,
@@ -164,7 +167,7 @@ router.get('/me', protect, async (req: any, res) => {
 router.post(
   '/forgot-password',
   [body('email').isEmail().withMessage('올바른 이메일 형식이 아닙니다')],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -200,7 +203,7 @@ router.post(
     body('token').notEmpty().withMessage('토큰이 필요합니다'),
     body('password').isLength({ min: 6 }).withMessage('비밀번호는 최소 6자 이상이어야 합니다'),
   ],
-  async (req, res) => {
+  async (req: Request, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {

@@ -1,8 +1,8 @@
-import express from 'express';
+import express, { Response } from 'express';
 import { body, validationResult, query } from 'express-validator';
 import ChatMessage from '../models/ChatMessage.js';
 import ChatRoom from '../models/ChatRoom.js';
-import { protect } from '../middleware/auth.js';
+import { protect, AuthRequest } from '../middleware/auth.js';
 
 const router = express.Router();
 
@@ -13,7 +13,7 @@ router.get(
     query('roomId').notEmpty().withMessage('채팅룸 ID가 필요합니다'),
     query('limit').optional().isInt({ min: 1, max: 100 }),
   ],
-  async (req: any, res) => {
+  async (req: AuthRequest, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -55,7 +55,7 @@ router.post(
     body('roomId').notEmpty().withMessage('채팅룸 ID가 필요합니다'),
     body('message').trim().notEmpty().withMessage('메시지를 입력해주세요').isLength({ max: 500 }).withMessage('메시지는 500자 이하여야 합니다'),
   ],
-  async (req: any, res) => {
+  async (req: AuthRequest, res: Response) => {
     try {
       const errors = validationResult(req);
       if (!errors.isEmpty()) {
@@ -68,6 +68,10 @@ router.post(
       const room = await ChatRoom.findById(roomId);
       if (!room) {
         return res.status(404).json({ message: '채팅룸을 찾을 수 없습니다' });
+      }
+
+      if (!req.user) {
+        return res.status(401).json({ message: '인증이 필요합니다' });
       }
 
       if (!room.isPublic && !room.members.includes(req.user._id)) {

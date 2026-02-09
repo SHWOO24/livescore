@@ -1,31 +1,27 @@
 import jwt from 'jsonwebtoken';
 
+const JWT_SECRET = process.env.JWT_SECRET || 'secret';
+
 export const generateToken = (userId: string): string => {
   return jwt.sign(
     { id: userId },
-    process.env.JWT_SECRET || 'secret',
-    {
-      expiresIn: process.env.JWT_EXPIRES_IN || '7d',
-    }
+    JWT_SECRET,
+    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' } as jwt.SignOptions
   );
 };
 
 export const generateVerificationToken = (): string => {
   return jwt.sign(
     { type: 'verification' },
-    process.env.JWT_SECRET || 'secret',
-    {
-      expiresIn: '24h',
-    }
+    JWT_SECRET,
+    { expiresIn: '24h' } as jwt.SignOptions
   );
 };
 
 export const generateResetToken = (): string => {
   return jwt.sign(
     { type: 'reset' },
-    process.env.JWT_SECRET || 'secret',
-    {
-      expiresIn: '1h',
-    }
+    JWT_SECRET,
+    { expiresIn: '1h' } as jwt.SignOptions
   );
 };

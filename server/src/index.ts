@@ -21,7 +21,7 @@ dotenv.config();
 const app = express();
 const httpServer = createServer(app);
 
-const PORT = process.env.PORT || 5000;
+const PORT = parseInt(process.env.PORT || '5000', 10);
 const MONGODB_URI = process.env.DATABASE_URL || process.env.MONGODB_URI || 'mongodb://localhost:27017/livescore';
 
 // CORS 설정
