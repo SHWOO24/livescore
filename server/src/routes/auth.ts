@@ -132,11 +132,15 @@ router.post(
 
       const token = generateToken(user._id.toString());
 
+      // Cross-site 요청을 지원하기 위해 쿠키 설정 개선
+      // 프로덕션에서는 sameSite: 'none'과 secure: true 필요
+      const isProduction = process.env.NODE_ENV === 'production';
       res.cookie('token', token, {
         httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
+        secure: isProduction, // 프로덕션에서는 HTTPS 필수
+        sameSite: isProduction ? 'none' : 'lax', // cross-site 지원
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7일
+        path: '/', // 모든 경로에서 사용 가능
       });
 
       res.json({
@@ -164,18 +168,35 @@ router.post('/logout', (req, res) => {
 
 // 현재 사용자 정보
 router.get('/me', protect, async (req: AuthRequest, res: Response) => {
-  if (!req.user) {
-    return res.status(401).json({ message: '인증이 필요합니다' });
+  try {
+    if (!req.user) {
+      // 인증 실패 로깅
+      console.log('[Auth] /me 요청 실패 - 사용자 정보 없음:', {
+        path: req.path,
+        origin: req.headers.origin,
+        hasCookie: !!req.cookies?.token,
+        hasAuthHeader: !!req.headers.authorization,
+      });
+      return res.status(401).json({ message: '인증이 필요합니다' });
+    }
+    
+    res.json({
+      user: {
+        id: req.user._id,
+        email: req.user.email,
+        name: req.user.name,
+        role: req.user.role,
+        status: req.user.status,
+      },
+    });
+  } catch (error: any) {
+    console.error('[Auth] /me 요청 처리 중 오류:', {
+      message: error.message,
+      path: req.path,
+      origin: req.headers.origin,
+    });
+    res.status(500).json({ message: '서버 오류가 발생했습니다' });
   }
-  res.json({
-    user: {
-      id: req.user._id,
-      email: req.user.email,
-      name: req.user.name,
-      role: req.user.role,
-      status: req.user.status,
-    },
-  });
 });
 
 // 비밀번호 재설정 요청

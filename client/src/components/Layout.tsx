@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { motion } from 'framer-motion';
 import LanguageSelector from './LanguageSelector';
 import Sidebar from './Sidebar';
+import Logo from './Logo';
 
 interface LayoutProps {
   children: ReactNode;
@@ -59,17 +60,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 </svg>
               </button>
 
-              <Link to="/" className="flex items-center">
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  className="flex items-center"
-                >
-                  <span className="text-6xl md:text-7xl lg:text-8xl font-bold text-primary-600 leading-none">
-                    S
-                  </span>
-                </motion.div>
-              </Link>
+              <Logo size="md" showText={true} className="flex items-center" />
 
               <nav className="hidden md:flex items-center space-x-6">
                 <Link

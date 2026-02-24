@@ -43,11 +43,18 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       setUser(response.data.user);
     } catch (error: any) {
       // 401은 정상적인 경우(로그인 전)이므로 조용히 처리
+      // 네트워크 오류나 기타 오류도 조용히 처리하여 페이지 렌더링을 방해하지 않음
       if (error.response?.status !== 401) {
-        console.error('Auth check error:', error);
+        // 401이 아닌 오류만 로깅 (네트워크 오류 등)
+        console.warn('[Auth] 인증 확인 실패 (비로그인 상태일 수 있음):', {
+          status: error.response?.status,
+          message: error.message,
+          code: error.code,
+        });
       }
       setUser(null);
     } finally {
+      // 항상 loading을 false로 설정하여 페이지 렌더링이 차단되지 않도록 함
       setLoading(false);
     }
   };

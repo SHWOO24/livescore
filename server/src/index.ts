@@ -104,9 +104,17 @@ app.use('/api/chat-rooms', chatRoomRoutes);
 app.use('/api', scoresRoutes); // 스코어 라우팅
 app.use('/api/livescore', livescoreRoutes); // 종목별 라이브스코어 라우팅
 
-// Health check (항상 200 반환)
+// Health check (항상 200 반환, 상세 정보 포함)
 app.get('/api/health', (req, res) => {
-  res.status(200).json({ status: 'ok', message: 'Server is running' });
+  res.status(200).json({ 
+    ok: true,
+    status: 'ok', 
+    message: 'Server is running',
+    time: new Date().toISOString(),
+    version: process.env.npm_package_version || '1.0.0',
+    environment: process.env.NODE_ENV || 'development',
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+  });
 });
 
 // Socket.io setup

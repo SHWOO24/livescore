@@ -20,6 +20,15 @@ export const protect = async (req: AuthRequest, res: Response, next: NextFunctio
     }
 
     if (!token) {
+      // 인증 실패 로깅 (민감 정보 제외)
+      console.log('[Auth] 인증 실패 - 토큰 없음:', {
+        path: req.path,
+        method: req.method,
+        origin: req.headers.origin,
+        hasCookie: !!req.cookies.token,
+        hasAuthHeader: !!req.headers.authorization,
+        userAgent: req.headers['user-agent']?.substring(0, 50),
+      });
       return res.status(401).json({ message: '인증이 필요합니다' });
     }
 

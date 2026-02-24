@@ -1,4 +1,4 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 
 // 프로덕션 빌드 시 환경변수 체크 플러그인
@@ -20,9 +20,21 @@ const envCheckPlugin = () => {
   }
 }
 
-export default defineConfig({
-  plugins: [react(), envCheckPlugin()],
-  server: {
+export default defineConfig(({ mode }) => {
+  // 환경변수 로드 (.env.production 또는 .env.development)
+  const env = loadEnv(mode, process.cwd(), '');
+  
+  // process.env에 환경변수 설정 (플러그인에서 사용)
+  if (env.VITE_API_BASE_URL) {
+    process.env.VITE_API_BASE_URL = env.VITE_API_BASE_URL;
+  }
+  if (env.VITE_SOCKET_URL) {
+    process.env.VITE_SOCKET_URL = env.VITE_SOCKET_URL;
+  }
+  
+  return {
+    plugins: [react(), envCheckPlugin()],
+    server: {
     port: 3000,
     // 개발 환경에서만 proxy 사용 (로컬 개발 서버용)
     // 프로덕션 빌드에서는 VITE_API_BASE_URL 환경변수를 사용하므로 proxy는 사용되지 않음
@@ -77,5 +89,6 @@ export default defineConfig({
     target: 'es2015',
     // 빌드 크기 최적화
     reportCompressedSize: true
+  }
   }
 })

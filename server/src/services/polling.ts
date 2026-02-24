@@ -68,11 +68,12 @@ async function updateSportScores(sport: string): Promise<void> {
       // 캐시에 저장
       setScores(sport, date, events);
       
-      // 변경사항이 있으면 Socket.io로 브로드캐스트 (livescore:update 이벤트)
-      if (hasChanges && io) {
+      // Socket.io로 브로드캐스트: 데이터가 있으면 항상 구독 room에 전송 (실시간 호출 보장)
+      // - hasChanges일 때: 변경된 이벤트만이 아닌 전체 스냅샷 전송으로 클라이언트가 항상 최신 상태 유지
+      // - hasChanges가 아니어도 주기적으로 스냅샷 전송하여 새로 구독한 클라이언트/재연결 클라이언트가 데이터 수신
+      if (io && events.length >= 0) {
         const room = `${sport}:${date}`;
-        // 프론트엔드 형식으로 변환
-        const frontendEvents = changedEvents.map(toFrontendFormat);
+        const frontendEvents = events.map(toFrontendFormat);
         
         io.to(room).emit('livescore:update', {
           sport,
@@ -81,7 +82,11 @@ async function updateSportScores(sport: string): Promise<void> {
           timestamp: new Date().toISOString(),
         });
         
-        console.log(`[Polling] ${sport} 업데이트: ${changedEvents.length}개 이벤트 변경 (livescore:update 브로드캐스트)`);
+        if (hasChanges && changedEvents.length > 0) {
+          console.log(`[Polling] ${sport} 업데이트: ${changedEvents.length}개 이벤트 변경 (livescore:update 브로드캐스트)`);
+        } else if (events.length > 0) {
+          console.log(`[Polling] ${sport} 스냅샷 전송: ${events.length}개 이벤트 (구독자 동기화)`);
+        }
       }
       
       if (events.length > 0) {

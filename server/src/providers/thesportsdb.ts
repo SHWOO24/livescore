@@ -152,14 +152,24 @@ function normalizeEvent(event: TheSportsDBEvent, sport: string): NormalizedEvent
  * 실시간 스코어 가져오기 (Fallback 포함)
  */
 export async function fetchLiveScore(sportName: string, useFallback = true): Promise<NormalizedEvent[]> {
+  const startTime = Date.now();
+  console.log(`[TheSportsDB] fetchLiveScore 시작: sport=${sportName}, useFallback=${useFallback}`);
+  
   try {
     const url = `${BASE_URL}/livescore.php?s=${encodeURIComponent(sportName)}`;
-    const data = await apiCall<TheSportsDBResponse>(url);
+    console.log(`[TheSportsDB] Upstream 요청: ${url}`);
     
-    const events = data.events || data.results || [];
-    const normalized = events
+    const data = await apiCall<TheSportsDBResponse>(url);
+    const responseTime = Date.now() - startTime;
+    
+    const rawEvents = data.events || data.results || [];
+    console.log(`[TheSportsDB] Upstream 응답 수신: sport=${sportName}, rawCount=${rawEvents.length}, time=${responseTime}ms`);
+    
+    const normalized = rawEvents
       .map(event => normalizeEvent(event, sportName))
       .filter((event): event is NormalizedEvent => event !== null);
+    
+    console.log(`[TheSportsDB] 정규화 완료: sport=${sportName}, normalizedCount=${normalized.length}, filtered=${rawEvents.length - normalized.length}`);
     
     // 응답이 null, empty, timeout일 경우 Fallback 시도
     if (normalized.length === 0 && useFallback) {
@@ -169,13 +179,22 @@ export async function fetchLiveScore(sportName: string, useFallback = true): Pro
       if (fallbackEvents.length > 0) {
         console.log(`[TheSportsDB] ESPN Fallback 성공: ${fallbackEvents.length}개 이벤트`);
         return fallbackEvents;
+      } else {
+        console.warn(`[TheSportsDB] ESPN Fallback도 비어있음: sport=${sportName}`);
       }
     }
     
     return normalized;
   } catch (error) {
     const axiosError = error as AxiosError;
-    console.error(`[TheSportsDB] fetchLiveScore 실패 (${sportName}):`, axiosError.message);
+    const responseTime = Date.now() - startTime;
+    console.error(`[TheSportsDB] fetchLiveScore 실패 (${sportName}):`, {
+      message: axiosError.message,
+      code: axiosError.code,
+      status: axiosError.response?.status,
+      statusText: axiosError.response?.statusText,
+      time: `${responseTime}ms`,
+    });
     
     // Fallback 시도
     if (useFallback) {
@@ -186,13 +205,19 @@ export async function fetchLiveScore(sportName: string, useFallback = true): Pro
         if (fallbackEvents.length > 0) {
           console.log(`[TheSportsDB] ESPN Fallback 성공: ${fallbackEvents.length}개 이벤트`);
           return fallbackEvents;
+        } else {
+          console.warn(`[TheSportsDB] ESPN Fallback도 비어있음: sport=${sportName}`);
         }
-      } catch (fallbackError) {
-        console.error(`[TheSportsDB] ESPN Fallback도 실패 (${sportName}):`, fallbackError);
+      } catch (fallbackError: any) {
+        console.error(`[TheSportsDB] ESPN Fallback도 실패 (${sportName}):`, {
+          message: fallbackError.message,
+          code: fallbackError.code,
+        });
       }
     }
     
     // Fallback 실패 시 빈 배열 반환 (서버 다운 방지)
+    console.warn(`[TheSportsDB] 최종 결과: sport=${sportName}, count=0 (모든 소스 실패)`);
     return [];
   }
 }

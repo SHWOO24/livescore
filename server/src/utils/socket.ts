@@ -3,6 +3,8 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import ChatMessage from '../models/ChatMessage.js';
 import ChatRoom from '../models/ChatRoom.js';
+import { getScores } from '../services/cache.js';
+import { toFrontendFormat } from '../providers/thesportsdb.js';
 
 // 채팅 Rate Limiting (3msg/5s)
 const chatRateLimit = new Map<string, { count: number; resetTime: number }>();
@@ -72,6 +74,22 @@ export const setupSocketIO = (io: Server) => {
         const room = `${data.sport}:${data.date}`;
         socket.join(room);
         console.log(`[Socket] ${socket.id}가 ${room} 구독`);
+        // 구독 즉시 캐시된 스코어가 있으면 해당 소켓에만 푸시 (실시간 화면 즉시 반영)
+        try {
+          const cached = getScores(data.sport, data.date);
+          if (cached && cached.length > 0) {
+            const payload = {
+              sport: data.sport,
+              date: data.date,
+              events: cached.map(toFrontendFormat),
+              timestamp: new Date().toISOString(),
+            };
+            socket.emit('livescore:update', payload);
+            console.log(`[Socket] ${room} 구독자에게 캐시 스냅샷 전송: ${cached.length}개 이벤트`);
+          }
+        } catch (err) {
+          console.warn('[Socket] 구독 시 캐시 스냅샷 전송 실패:', err);
+        }
       } else {
         // 모든 스포츠 구독
         socket.join('scores:all');

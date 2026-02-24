@@ -51,9 +51,18 @@ const Home: React.FC = () => {
   const [connectionMode, setConnectionMode] = useState<ConnectionMode>('rest');
   const { socket, connected } = useSocket();
 
-  // 스포츠 목록 로드
+  // 스포츠 목록 및 라이브스코어 로드 (인증과 완전히 독립적으로 실행)
   useEffect(() => {
-    loadSports();
+    // 인증 상태와 관계없이 즉시 로드
+    const loadData = async () => {
+      // 병렬로 로드하여 인증 실패가 라이브스코어 로딩을 방해하지 않도록 함
+      await Promise.allSettled([
+        loadSports(),
+        loadScores(selectedSport, false),
+      ]);
+    };
+    
+    loadData();
   }, []);
 
   // 선택된 스포츠의 스코어 로드
@@ -140,8 +149,13 @@ const Home: React.FC = () => {
         }
       }
     } catch (error: any) {
-      console.error('스포츠 목록 로드 실패:', error);
-      // 기본값 사용
+      // 에러 로깅 강화 (상태 코드, 메시지 포함)
+      console.warn('[Home] 스포츠 목록 로드 실패 (기본값 사용):', {
+        status: error.response?.status,
+        message: error.message,
+        code: error.code,
+      });
+      // 기본값 사용 - 페이지는 계속 렌더링됨
     }
   };
 
@@ -156,38 +170,116 @@ const Home: React.FC = () => {
         params: { sport },
       });
       
-      if (response.data.events) {
+      // 응답 데이터 로깅 (디버깅용)
+      const rawCount = Array.isArray(response.data.events) ? response.data.events.length : 0;
+      console.log(`[Home] Livescore 응답 수신:`, {
+        sport,
+        rawCount,
+        hasEvents: Array.isArray(response.data.events),
+        ok: response.data.ok,
+        error: response.data.error,
+        debug: response.data._debug,
+        timestamp: response.data.timestamp,
+      });
+      
+      // events가 배열인지 확인 (빈 배열도 처리)
+      if (Array.isArray(response.data.events)) {
         // 프론트엔드 형식에서 NormalizedEvent로 변환
-        const normalizedEvents: NormalizedEvent[] = response.data.events.map((e: any) => ({
-          sport: e.sport,
-          eventId: e.eventId,
-          league: e.league,
-          homeTeam: e.home.name,
-          awayTeam: e.away.name,
-          homeScore: e.home.score,
-          awayScore: e.away.score,
-          status: e.status,
-          startTime: new Date(`${e.date}T${e.time}`).toISOString(),
-          lastUpdated: response.data.timestamp || new Date().toISOString(),
-        }));
+        const normalizedEvents: NormalizedEvent[] = response.data.events.map((e: {
+          sport?: string;
+          eventId?: string;
+          league?: string;
+          home?: { name?: string; score?: number };
+          away?: { name?: string; score?: number };
+          homeTeam?: string;
+          awayTeam?: string;
+          homeScore?: number;
+          awayScore?: number;
+          status?: 'scheduled' | 'live' | 'finished';
+          date?: string;
+          time?: string;
+          startTime?: string;
+          venue?: string;
+        }) => {
+          try {
+            return {
+              sport: e.sport || sport,
+              eventId: e.eventId || `unknown-${Date.now()}-${Math.random()}`,
+              league: e.league || 'Unknown League',
+              homeTeam: e.home?.name || e.homeTeam || 'Home Team',
+              awayTeam: e.away?.name || e.awayTeam || 'Away Team',
+              homeScore: typeof e.home?.score === 'number' ? e.home.score : (typeof e.homeScore === 'number' ? e.homeScore : 0),
+              awayScore: typeof e.away?.score === 'number' ? e.away.score : (typeof e.awayScore === 'number' ? e.awayScore : 0),
+              status: e.status || 'scheduled',
+              startTime: e.date && e.time ? new Date(`${e.date}T${e.time}`).toISOString() : (e.startTime || new Date().toISOString()),
+              lastUpdated: response.data.timestamp || new Date().toISOString(),
+              venue: e.venue,
+            };
+          } catch (parseError) {
+            console.warn('[Home] 이벤트 파싱 실패:', e, parseError);
+            return null;
+          }
+        }).filter((e: NormalizedEvent | null): e is NormalizedEvent => e !== null);
+        
+        // 필터링 전 카운트 로깅
+        const countBeforeFilter = normalizedEvents.length;
+        console.log(`[Home] 이벤트 변환 완료:`, {
+          sport,
+          countBeforeFilter,
+          normalizedCount: normalizedEvents.length,
+        });
         
         setEvents(normalizedEvents);
         setLastUpdated(response.data.timestamp || new Date().toISOString());
+        
+        // 필터별 카운트 로깅
+        const liveCount = normalizedEvents.filter(e => e.status === 'live').length;
+        const scheduledCount = normalizedEvents.filter(e => e.status === 'scheduled').length;
+        const finishedCount = normalizedEvents.filter(e => e.status === 'finished').length;
+        
+        console.log(`[Home] 필터별 카운트:`, {
+          sport,
+          total: normalizedEvents.length,
+          live: liveCount,
+          scheduled: scheduledCount,
+          finished: finishedCount,
+          currentFilter: statusFilter,
+        });
+      } else {
+        // events가 배열이 아닌 경우
+        console.warn(`[Home] events가 배열이 아님:`, {
+          sport,
+          eventsType: typeof response.data.events,
+          eventsValue: response.data.events,
+          fullResponse: response.data,
+        });
+        setEvents([]);
+        setLastUpdated(new Date().toISOString());
       }
     } catch (error: any) {
-      console.error('스코어 로드 실패:', error);
+      // 에러 로깅 강화
+      console.warn('[Home] 스코어 로드 실패:', {
+        status: error.response?.status,
+        message: error.message,
+        code: error.code,
+        url: error.config?.url,
+      });
       
       if (!silent) {
         const errorKey = 'backend-connection-error';
         if (!sessionStorage.getItem(errorKey)) {
-          toast.error('백엔드 서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.', {
-            duration: 5000,
-          });
-          sessionStorage.setItem(errorKey, 'true');
-          setTimeout(() => sessionStorage.removeItem(errorKey), 30000);
+          // 네트워크 오류가 아닌 경우에만 토스트 표시 (401 등은 정상)
+          if (error.code !== 'ERR_NETWORK' && error.response?.status !== 401) {
+            toast.error('백엔드 서버에 연결할 수 없습니다. 서버가 실행 중인지 확인해주세요.', {
+              duration: 5000,
+            });
+            sessionStorage.setItem(errorKey, 'true');
+            setTimeout(() => sessionStorage.removeItem(errorKey), 30000);
+          }
         }
       }
       
+      // 빈 배열로 설정하여 "경기 정보가 없습니다" 메시지 표시
       if (!silent) {
         setEvents([]);
       }
@@ -237,27 +329,55 @@ const Home: React.FC = () => {
   });
 
   // 상태별 필터링
-  const liveEvents = events.filter((e) => e.status === 'live');
-  const scheduledEvents = events.filter((e) => e.status === 'scheduled');
-  const finishedEvents = events.filter((e) => e.status === 'finished');
+  const liveEvents = React.useMemo(() => 
+    events.filter((e) => e.status === 'live'), 
+    [events]
+  );
+  const scheduledEvents = React.useMemo(() => 
+    events.filter((e) => e.status === 'scheduled'), 
+    [events]
+  );
+  const finishedEvents = React.useMemo(() => 
+    events.filter((e) => e.status === 'finished'), 
+    [events]
+  );
 
   // 선택된 필터에 따라 이벤트 필터링
   const filteredEvents = React.useMemo(() => {
+    let result: NormalizedEvent[];
     switch (statusFilter) {
       case 'live':
-        return liveEvents;
+        result = liveEvents;
+        break;
       case 'scheduled':
-        return scheduledEvents;
+        result = scheduledEvents;
+        break;
       case 'finished':
-        return finishedEvents;
+        result = finishedEvents;
+        break;
       default:
-        return events;
+        result = events;
     }
-  }, [events, statusFilter, liveEvents, scheduledEvents, finishedEvents]);
+    
+    // 필터링 결과 로깅 (디버깅용)
+    if (result.length === 0 && events.length > 0) {
+      console.log(`[Home] 필터링 결과:`, {
+        sport: selectedSport,
+        statusFilter,
+        totalEvents: events.length,
+        liveCount: liveEvents.length,
+        scheduledCount: scheduledEvents.length,
+        finishedCount: finishedEvents.length,
+        filteredCount: result.length,
+      });
+    }
+    
+    return result;
+  }, [events, statusFilter, liveEvents, scheduledEvents, finishedEvents, selectedSport]);
 
   return (
     <div className="min-h-screen">
-      {/* 협찬사 배너 광고 */}
+      {/* 텔레그램 문의 배너 */}
       <AdBanner />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -357,8 +477,20 @@ const Home: React.FC = () => {
                 : `${selectedSport} ${statusFilter === 'live' ? '라이브' : statusFilter === 'scheduled' ? '예정' : '종료'} 경기가 없습니다`}
             </p>
             <p className="text-gray-400 text-sm mt-2">
-              {connected ? '실시간 업데이트 대기 중...' : '백엔드 서버가 실행 중인지 확인해주세요.'}
+              {events.length === 0 
+                ? (connected 
+                  ? '실시간 업데이트 대기 중... (데이터 소스에서 경기를 가져오는 중일 수 있습니다)'
+                  : '백엔드 서버가 실행 중인지 확인해주세요.')
+                : `전체 ${events.length}개 경기 중 ${statusFilter === 'live' ? '라이브' : statusFilter === 'scheduled' ? '예정' : '종료'} 경기가 없습니다.`}
             </p>
+            {events.length === 0 && (
+              <button
+                onClick={() => loadScores(selectedSport, false)}
+                className="mt-4 px-4 py-2 bg-primary-600 text-white rounded-lg hover:bg-primary-700 transition-colors"
+              >
+                다시 시도
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

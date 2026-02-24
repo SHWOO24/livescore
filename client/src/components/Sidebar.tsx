@@ -7,22 +7,7 @@ interface SidebarProps {
 }
 
 const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
-  const adBanners = [
-    {
-      id: 1,
-      title: 'Sidebar Ad 1',
-      image: 'https://via.placeholder.com/300x250/0ea5e9/ffffff?text=Sidebar+Ad+1',
-      link: '#',
-      size: '300x250',
-    },
-    {
-      id: 2,
-      title: 'Sidebar Ad 2',
-      image: 'https://via.placeholder.com/300x250/10b981/ffffff?text=Sidebar+Ad+2',
-      link: '#',
-      size: '300x250',
-    },
-  ];
+  const TELEGRAM_URL = import.meta.env.VITE_TELEGRAM_URL || 'https://t.me/scorelivenow';
 
   return (
     <>
@@ -59,55 +44,25 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
             </button>
           </div>
 
-          {/* 광고 배너 섹션 */}
+          {/* 텔레그램 문의 배너 */}
           <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">광고</h3>
-            {adBanners.length > 0 ? (
-              adBanners.map((banner, index) => (
-                <motion.div
-                  key={banner.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="relative"
-                >
-                  <motion.a
-                    href={banner.link}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    whileHover={{ scale: 1.02 }}
-                    className="block"
-                  >
-                    <img
-                      src={banner.image}
-                      alt={banner.title}
-                      className="w-full rounded-lg shadow-md hover:shadow-lg transition-shadow"
-                    />
-                  </motion.a>
-                  <span className="absolute -bottom-1 -right-1 text-[8px] bg-gray-800 text-white px-1 rounded">
-                    {banner.size}
-                  </span>
-                </motion.div>
-              ))
-            ) : (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="relative bg-gradient-to-r from-yellow-400 to-orange-500 rounded-lg p-4 text-center"
+            <h3 className="text-lg font-semibold text-gray-800 mb-4">문의</h3>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="relative"
+            >
+              <motion.a
+                href={TELEGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                whileHover={{ scale: 1.02 }}
+                className="block bg-gradient-to-r from-blue-500 to-blue-600 rounded-lg p-6 text-center shadow-md hover:shadow-lg transition-shadow"
               >
-                <a
-                  href="mailto:ad@scorelivenow.com?subject=배너광고 문의"
-                  className="block"
-                >
-                  <p className="text-white font-bold">📢 배너광고 모집</p>
-                  <p className="text-white text-sm mt-2">사이드 배너 (300x250)</p>
-                  <p className="text-white text-xs mt-1">광고 문의: ad@scorelivenow.com</p>
-                </a>
-                <span className="absolute -bottom-1 -right-1 text-[8px] bg-gray-800 text-white px-1 rounded">
-                  300x250
-                </span>
-              </motion.div>
-            )}
+                <p className="text-white font-bold text-lg mb-2">📱 텔레그램 문의</p>
+                <p className="text-white text-base">scorelivenow.com</p>
+              </motion.a>
+            </motion.div>
           </div>
         </div>
       </motion.aside>
